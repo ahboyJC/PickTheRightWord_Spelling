@@ -72,8 +72,8 @@
       font-size: 1.8em;
       margin: 25px;
     }
-    /* Next and Restart button styling */
-    #nextButton, #restartButton {
+    /* Start, Next, and Restart button styling */
+    #startButton, #nextButton, #restartButton {
       padding: 15px 25px;
       font-size: 1.5em;
       margin: 25px;
@@ -85,8 +85,8 @@
       box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
       transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
     }
-    /* Hover effect for Next and Restart buttons */
-    #nextButton:hover, #restartButton:hover {
+    /* Hover effect for buttons */
+    #startButton:hover, #nextButton:hover, #restartButton:hover {
       background-color: #357ABD;
       transform: scale(1.05);
       box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
@@ -103,7 +103,7 @@
         font-size: 1.2em;
         padding: 15px 20px;
       }
-      #nextButton, #restartButton {
+      #startButton, #nextButton, #restartButton {
         font-size: 1.2em;
         padding: 10px 18px;
       }
@@ -116,13 +116,15 @@
   <div id="gameArea"></div>
   <div id="message"></div>
   <div id="score"></div>
+  <!-- Start button added to ensure user interaction -->
+  <button id="startButton" onclick="startGame()">Start Game</button>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
 
   <!-- Audio elements for background music and sound effects -->
   <audio id="bgMusic" src="background.mp3" loop></audio>
-  <audio id="correctSound" src="correct.wav"></audio>
-  <audio id="wrongSound" src="wrong.wav"></audio>
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
 
   <script>
     // List of words for the game (all in lower case)
@@ -176,14 +178,11 @@
       let attempts = 0;
       do {
         let letters = word.split('');
-        // Swap two adjacent letters at a random index
         let index = Math.floor(Math.random() * (letters.length - 1));
         let temp = letters[index];
         letters[index] = letters[index + 1];
         letters[index + 1] = temp;
         misspelled = letters.join('');
-
-        // If the swap didn't change the word (e.g., identical letters), try dropping a letter
         if (misspelled === word) {
           let dropIndex = Math.floor(Math.random() * word.length);
           misspelled = word.slice(0, dropIndex) + word.slice(dropIndex + 1);
@@ -203,22 +202,25 @@
 
     // Start or restart the game
     function startGame() {
+      // Hide the start button after click
+      document.getElementById("startButton").style.display = "none";
       currentIndex = 0;
       score = 0;
       document.getElementById("score").innerText = "";
       document.getElementById("message").innerText = "";
       document.getElementById("restartButton").style.display = "none";
       document.getElementById("nextButton").style.display = "none";
-      // Create a new randomized copy of the words array
       shuffledWords = shuffleArray(words.slice());
 
-      // Start background music (this should work after user interaction)
-      document.getElementById("bgMusic").play();
+      // Trigger background music (returns a promise, which we log in case of errors)
+      document.getElementById("bgMusic").play().catch(error => {
+        console.log("Background music play error:", error);
+      });
 
       nextWord();
     }
 
-    // Display the next word's choices with the correct answer in a random position
+    // Display the next word's choices with randomized order
     function nextWord() {
       document.getElementById("message").innerText = "";
       document.getElementById("nextButton").style.display = "none";
@@ -233,7 +235,6 @@
       currentWord = shuffledWords[currentIndex];
       currentMisspelled = generateMisspelling(currentWord);
 
-      // Randomize the order: 50% chance for the correct word to be first, otherwise second.
       let choices = (Math.random() < 0.5) ? [currentWord, currentMisspelled] : [currentMisspelled, currentWord];
 
       let gameArea = document.getElementById("gameArea");
@@ -256,7 +257,7 @@
         buttonClicked.classList.add("correct");
         document.getElementById("message").innerText = "Correct! Great job!";
         score++;
-        document.getElementById("correctSound").play();
+        document.getElementById("correctSound").play().catch(error => console.log(error));
       } else {
         buttonClicked.classList.add("wrong");
         buttons.forEach(btn => {
@@ -265,13 +266,11 @@
           }
         });
         document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
-        document.getElementById("wrongSound").play();
+        document.getElementById("wrongSound").play().catch(error => console.log(error));
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
     }
-
-    window.onload = startGame;
   </script>
 </body>
 </html>
