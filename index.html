@@ -119,10 +119,15 @@
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
 
+  <!-- Audio elements for background music and sound effects -->
+  <audio id="bgMusic" src="background.mp3" loop></audio>
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
+
   <script>
     // List of words for the game (all in lower case)
     const words = [
-    "about",
+      "about",
       "paw",
       "claw",
       "saw",
@@ -166,12 +171,9 @@
 
     // Generate a misspelled version of the word that does not match any correct word
     function generateMisspelling(word) {
-      // If the word is too short, return it as is.
       if (word.length < 2) return word;
-
       let misspelled = word;
       let attempts = 0;
-      // Try up to 10 times to generate a misspelling that is not in our list
       do {
         let letters = word.split('');
         // Swap two adjacent letters at a random index
@@ -185,14 +187,11 @@
         if (misspelled === word) {
           let dropIndex = Math.floor(Math.random() * word.length);
           misspelled = word.slice(0, dropIndex) + word.slice(dropIndex + 1);
-          // As a fallback, if still unchanged, append a letter.
           if (misspelled === word) {
             misspelled = word + "e";
           }
         }
         attempts++;
-
-        // If after several attempts we still haven't found a suitable misspelling, append a random letter.
         if (attempts >= 10 && (misspelled === word || words.includes(misspelled))) {
           const randomChar = String.fromCharCode(97 + Math.floor(Math.random() * 26));
           misspelled = word + randomChar;
@@ -212,6 +211,10 @@
       document.getElementById("nextButton").style.display = "none";
       // Create a new randomized copy of the words array
       shuffledWords = shuffleArray(words.slice());
+
+      // Start background music (this should work after user interaction)
+      document.getElementById("bgMusic").play();
+
       nextWord();
     }
 
@@ -220,7 +223,6 @@
       document.getElementById("message").innerText = "";
       document.getElementById("nextButton").style.display = "none";
 
-      // Check if we have completed all words
       if (currentIndex >= shuffledWords.length) {
         document.getElementById("score").innerText = "Game Over! Your score: " + score + " out of " + shuffledWords.length;
         document.getElementById("restartButton").style.display = "inline-block";
@@ -228,19 +230,12 @@
         return;
       }
 
-      // Get the current word and generate its misspelled version
       currentWord = shuffledWords[currentIndex];
       currentMisspelled = generateMisspelling(currentWord);
 
       // Randomize the order: 50% chance for the correct word to be first, otherwise second.
-      let choices;
-      if (Math.random() < 0.5) {
-        choices = [currentWord, currentMisspelled];
-      } else {
-        choices = [currentMisspelled, currentWord];
-      }
+      let choices = (Math.random() < 0.5) ? [currentWord, currentMisspelled] : [currentMisspelled, currentWord];
 
-      // Clear the game area and create buttons for each choice
       let gameArea = document.getElementById("gameArea");
       gameArea.innerHTML = "";
       choices.forEach(choice => {
@@ -254,7 +249,6 @@
 
     // Check the answer when a choice is clicked
     function checkAnswer(selected, buttonClicked) {
-      // Disable all choice buttons to prevent multiple selections
       let buttons = document.querySelectorAll(".choice-button");
       buttons.forEach(btn => btn.disabled = true);
 
@@ -262,21 +256,21 @@
         buttonClicked.classList.add("correct");
         document.getElementById("message").innerText = "Correct! Great job!";
         score++;
+        document.getElementById("correctSound").play();
       } else {
         buttonClicked.classList.add("wrong");
-        // Highlight the correct button
         buttons.forEach(btn => {
           if (btn.innerText === currentWord) {
             btn.classList.add("correct");
           }
         });
         document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
+        document.getElementById("wrongSound").play();
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
     }
 
-    // Start the game when the page loads
     window.onload = startGame;
   </script>
 </body>
