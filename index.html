@@ -116,15 +116,15 @@
   <div id="gameArea"></div>
   <div id="message"></div>
   <div id="score"></div>
-  <!-- Start button added to ensure user interaction -->
+  <!-- Start button to ensure user interaction -->
   <button id="startButton" onclick="startGame()">Start Game</button>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
 
   <!-- Audio elements for background music and sound effects -->
   <audio id="bgMusic" src="background.mp3" loop></audio>
-  <audio id="correctSound" src="correct.wav"></audio>
-  <audio id="wrongSound" src="wrong.wav"></audio>
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
 
   <script>
     // List of words for the game (all in lower case)
@@ -178,11 +178,14 @@
       let attempts = 0;
       do {
         let letters = word.split('');
+        // Swap two adjacent letters at a random index
         let index = Math.floor(Math.random() * (letters.length - 1));
         let temp = letters[index];
         letters[index] = letters[index + 1];
         letters[index + 1] = temp;
         misspelled = letters.join('');
+
+        // If the swap didn't change the word, try dropping a letter
         if (misspelled === word) {
           let dropIndex = Math.floor(Math.random() * word.length);
           misspelled = word.slice(0, dropIndex) + word.slice(dropIndex + 1);
@@ -212,11 +215,10 @@
       document.getElementById("nextButton").style.display = "none";
       shuffledWords = shuffleArray(words.slice());
 
-      // Trigger background music (returns a promise, which we log in case of errors)
-      document.getElementById("bgMusic").play().catch(error => {
-        console.log("Background music play error:", error);
-      });
-
+      // Play background music only if the tab is active
+      if (document.visibilityState === 'visible') {
+        document.getElementById("bgMusic").play().catch(error => console.log("BG Music error:", error));
+      }
       nextWord();
     }
 
@@ -235,7 +237,10 @@
       currentWord = shuffledWords[currentIndex];
       currentMisspelled = generateMisspelling(currentWord);
 
-      let choices = (Math.random() < 0.5) ? [currentWord, currentMisspelled] : [currentMisspelled, currentWord];
+      // Randomize the order: 50% chance for the correct word to be first, otherwise second.
+      let choices = (Math.random() < 0.5)
+        ? [currentWord, currentMisspelled]
+        : [currentMisspelled, currentWord];
 
       let gameArea = document.getElementById("gameArea");
       gameArea.innerHTML = "";
@@ -257,7 +262,9 @@
         buttonClicked.classList.add("correct");
         document.getElementById("message").innerText = "Correct! Great job!";
         score++;
-        document.getElementById("correctSound").play().catch(error => console.log(error));
+        if (document.visibilityState === 'visible') {
+          document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
+        }
       } else {
         buttonClicked.classList.add("wrong");
         buttons.forEach(btn => {
@@ -266,11 +273,24 @@
           }
         });
         document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
-        document.getElementById("wrongSound").play().catch(error => console.log(error));
+        if (document.visibilityState === 'visible') {
+          document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
+        }
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
     }
+
+    // Listen for tab visibility changes to control background music
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === 'hidden') {
+        // Pause background music when tab is inactive
+        document.getElementById("bgMusic").pause();
+      } else {
+        // Resume background music when tab becomes active
+        document.getElementById("bgMusic").play().catch(error => console.log("BG Music resume error:", error));
+      }
+    });
   </script>
 </body>
 </html>
