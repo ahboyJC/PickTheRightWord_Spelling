@@ -2,167 +2,53 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <!-- Ensure proper scaling on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spelling Game for Josh</title>
-  <!-- Import a playful Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* Overall body styles with a soft gradient background */
-    body {
-      font-family: 'Comic Neue', cursive, sans-serif;
-      background: linear-gradient(135deg, #fdfbfb, #ebedee);
-      margin: 0;
-      padding: 30px;
-      text-align: center;
-      color: #333;
-    }
-    /* Heading style */
-    h1 {
-      font-size: 3em;
-      color: #ff6f61;
-      margin-bottom: 0.3em;
-    }
-    /* Subheading/instructions style */
-    p {
-      font-size: 1.5em;
-      margin: 0.5em 0 1em 0;
-      color: #555;
-    }
-    /* The area where the word buttons are displayed */
-    #gameArea {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 30px;
-    }
-    /* Common button styling */
-    .button {
-      padding: 20px 30px;
-      margin: 15px;
-      font-size: 1.5em;
-      border: none;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-    }
-    /* Style for the choice buttons */
-    .choice-button {
-      min-width: 240px;
-      background-color: #ffd966;
-      color: #333;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    }
-    /* Hover effect for choice buttons */
-    .choice-button:hover {
-      transform: scale(1.05);
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
-    }
-    /* Correct and wrong feedback colors */
-    .correct {
-      background-color: #7ed321 !important;
-      color: #fff !important;
-    }
-    .wrong {
-      background-color: #d0021b !important;
-      color: #fff !important;
-    }
-    /* Feedback message and score styles */
-    #message, #score {
-      font-size: 1.8em;
-      margin: 25px;
-    }
-    /* Start, Next, and Restart button styling */
-    #startButton, #nextButton, #restartButton {
-      padding: 15px 25px;
-      font-size: 1.5em;
-      margin: 25px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background-color: #4a90e2;
-      color: #fff;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
-    }
-    /* Hover effect for buttons */
-    #startButton:hover, #nextButton:hover, #restartButton:hover {
-      background-color: #357ABD;
-      transform: scale(1.05);
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
-    }
-    /* Responsive adjustments for smaller screens */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 2.5em;
-      }
-      p {
-        font-size: 1.2em;
-      }
-      .button {
-        font-size: 1.2em;
-        padding: 15px 20px;
-      }
-      #startButton, #nextButton, #restartButton {
-        font-size: 1.2em;
-        padding: 10px 18px;
-      }
-    }
+    body { font-family: 'Comic Neue', cursive, sans-serif; text-align: center; padding: 30px; background: linear-gradient(135deg, #fdfbfb, #ebedee); color: #333; }
+    h1 { font-size: 3em; color: #ff6f61; margin-bottom: 0.3em; }
+    p { font-size: 1.5em; color: #555; }
+    #gameArea { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 30px; }
+    .button { padding: 20px 30px; margin: 15px; font-size: 1.5em; border-radius: 15px; cursor: pointer; border: none; transition: transform 0.2s, background-color 0.2s; }
+    .choice-button { min-width: 240px; background-color: #ffd966; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
+    .correct { background-color: #7ed321 !important; color: #fff !important; }
+    .wrong { background-color: #d0021b !important; color: #fff !important; }
+    #message, #score { font-size: 1.8em; margin: 25px; }
+    #startButton, #nextButton, #restartButton { padding: 15px 25px; font-size: 1.5em; margin: 25px; border-radius: 10px; cursor: pointer; background-color: #4a90e2; color: #fff; }
+    @media (max-width: 600px) { h1 { font-size: 2.5em; } p { font-size: 1.2em; } }
   </style>
 </head>
 <body>
   <h1>Spelling Game for Josh</h1>
   <p>Choose the correctly spelled word!</p>
+  <button id="startButton" onclick="startGame()">Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
   <div id="score"></div>
-  <!-- Start button to ensure user interaction -->
-  <button id="startButton" onclick="startGame()">Start Game</button>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
 
-  <!-- Audio elements for background music and sound effects -->
-  <audio id="bgMusic" src="background.mp3" loop></audio>
-  <audio id="correctSound" src="correct.mp3"></audio>
-  <audio id="wrongSound" src="wrong.mp3"></audio>
-
   <script>
-    // List of words for the game (all in lower case)
-    const words = [
-      "about",
-      "paw",
-      "claw",
-      "saw",
-      "straw",
-      "raw",
-      "low",
-      "blow",
-      "our",
-      "cloud",
-      "house",
-      "been",
-      "blue",
-      "but",
-      "by",
-      "call",
-      "can",
-      "come",
-      "day",
-      "did",
-      "do",
-      "few",
-      "new",
-      "pew"
-    ];
-
-    // Global game state variables
+    let words = [];
     let shuffledWords = [];
     let currentIndex = 0;
     let score = 0;
     let currentWord = "";
     let currentMisspelled = "";
 
-    // Shuffle an array using the Fisher-Yates shuffle algorithm
+    // Load words from CSV file
+    function loadWords() {
+      fetch('words.csv')
+        .then(response => response.text())
+        .then(text => {
+          words = text.split(',').map(word => word.trim());
+          console.log("Loaded words:", words);
+        })
+        .catch(error => console.error("Error loading words:", error));
+    }
+
+    // Shuffle an array
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1));
@@ -171,21 +57,19 @@
       return array;
     }
 
-    // Generate a misspelled version of the word that does not match any correct word
+    // Generate a misspelled version of the word
     function generateMisspelling(word) {
       if (word.length < 2) return word;
       let misspelled = word;
       let attempts = 0;
       do {
         let letters = word.split('');
-        // Swap two adjacent letters at a random index
         let index = Math.floor(Math.random() * (letters.length - 1));
         let temp = letters[index];
         letters[index] = letters[index + 1];
         letters[index + 1] = temp;
         misspelled = letters.join('');
 
-        // If the swap didn't change the word, try dropping a letter
         if (misspelled === word) {
           let dropIndex = Math.floor(Math.random() * word.length);
           misspelled = word.slice(0, dropIndex) + word.slice(dropIndex + 1);
@@ -205,7 +89,6 @@
 
     // Start or restart the game
     function startGame() {
-      // Hide the start button after click
       document.getElementById("startButton").style.display = "none";
       currentIndex = 0;
       score = 0;
@@ -213,16 +96,17 @@
       document.getElementById("message").innerText = "";
       document.getElementById("restartButton").style.display = "none";
       document.getElementById("nextButton").style.display = "none";
-      shuffledWords = shuffleArray(words.slice());
 
-      // Play background music only if the tab is active
-      if (document.visibilityState === 'visible') {
-        document.getElementById("bgMusic").play().catch(error => console.log("BG Music error:", error));
+      if (words.length === 0) {
+        alert("Words are still loading. Please try again in a few seconds.");
+        return;
       }
+
+      shuffledWords = shuffleArray(words.slice());
       nextWord();
     }
 
-    // Display the next word's choices with randomized order
+    // Display the next word's choices
     function nextWord() {
       document.getElementById("message").innerText = "";
       document.getElementById("nextButton").style.display = "none";
@@ -236,11 +120,7 @@
 
       currentWord = shuffledWords[currentIndex];
       currentMisspelled = generateMisspelling(currentWord);
-
-      // Randomize the order: 50% chance for the correct word to be first, otherwise second.
-      let choices = (Math.random() < 0.5)
-        ? [currentWord, currentMisspelled]
-        : [currentMisspelled, currentWord];
+      let choices = Math.random() < 0.5 ? [currentWord, currentMisspelled] : [currentMisspelled, currentWord];
 
       let gameArea = document.getElementById("gameArea");
       gameArea.innerHTML = "";
@@ -260,37 +140,4 @@
 
       if (selected === currentWord) {
         buttonClicked.classList.add("correct");
-        document.getElementById("message").innerText = "Correct! Great job!";
-        score++;
-        if (document.visibilityState === 'visible') {
-          document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
-        }
-      } else {
-        buttonClicked.classList.add("wrong");
-        buttons.forEach(btn => {
-          if (btn.innerText === currentWord) {
-            btn.classList.add("correct");
-          }
-        });
-        document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
-        if (document.visibilityState === 'visible') {
-          document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
-        }
-      }
-      currentIndex++;
-      document.getElementById("nextButton").style.display = "inline-block";
-    }
-
-    // Listen for tab visibility changes to control background music
-    document.addEventListener("visibilitychange", function() {
-      if (document.visibilityState === 'hidden') {
-        // Pause background music when tab is inactive
-        document.getElementById("bgMusic").pause();
-      } else {
-        // Resume background music when tab becomes active
-        document.getElementById("bgMusic").play().catch(error => console.log("BG Music resume error:", error));
-      }
-    });
-  </script>
-</body>
-</html>
+        document.getElementById("message").innerText = "
