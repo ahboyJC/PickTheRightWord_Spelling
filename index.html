@@ -16,20 +16,23 @@
     .wrong { background-color: #d0021b !important; color: #fff !important; }
     #message, #score { font-size: 1.8em; margin: 25px; }
     #startButton, #nextButton, #restartButton { padding: 15px 25px; font-size: 1.5em; margin: 25px; border-radius: 10px; cursor: pointer; background-color: #4a90e2; color: #fff; }
-    #loadingMessage { font-size: 1.5em; color: #777; display: none; }
     @media (max-width: 600px) { h1 { font-size: 2.5em; } p { font-size: 1.2em; } }
   </style>
 </head>
 <body>
   <h1>Spelling Game</h1>
   <p>Choose the correctly spelled word!</p>
-  <p id="loadingMessage">Loading words... Please wait.</p>
-  <button id="startButton" onclick="startGame()" disabled>Start Game</button>
+  <button id="startButton" onclick="startGame()">Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
   <div id="score"></div>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
+
+  <!-- Audio Elements -->
+  <audio id="bgMusic" src="background.mp3" loop></audio>
+  <audio id="correctSound" src="correct.mp3"></audio>
+  <audio id="wrongSound" src="wrong.mp3"></audio>
 
   <script>
     let words = [];
@@ -41,26 +44,31 @@
 
     // Load words from CSV file
     function loadWords() {
-      document.getElementById("loadingMessage").style.display = "block";
-
       fetch('words.csv')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Failed to load words.csv");
-          }
-          return response.text();
-        })
+        .then(response => response.text())
         .then(text => {
           words = text.split(',').map(word => word.trim());
-          console.log("Loaded words:", words);
-          document.getElementById("loadingMessage").style.display = "none";
           document.getElementById("startButton").disabled = false; // Enable start button after words load
         })
-        .catch(error => {
-          console.error("Error loading words:", error);
-          document.getElementById("loadingMessage").innerText = "Error loading words. Please check words.csv";
-        });
+        .catch(error => console.error("Error loading words:", error));
     }
+
+    // Start background music (must be triggered by user)
+    function playBackgroundMusic() {
+      let bgMusic = document.getElementById("bgMusic");
+      bgMusic.volume = 0.5; // Adjust volume
+      bgMusic.play().catch(error => console.log("BG Music play error:", error));
+    }
+
+    // Pause/resume music when tab visibility changes
+    document.addEventListener("visibilitychange", function() {
+      let bgMusic = document.getElementById("bgMusic");
+      if (document.hidden) {
+        bgMusic.pause();
+      } else {
+        bgMusic.play().catch(error => console.log("BG Music resume error:", error));
+      }
+    });
 
     // Shuffle an array
     function shuffleArray(array) {
@@ -83,27 +91,20 @@
         letters[index] = letters[index + 1];
         letters[index + 1] = temp;
         misspelled = letters.join('');
-
-        if (misspelled === word) {
-          let dropIndex = Math.floor(Math.random() * word.length);
-          misspelled = word.slice(0, dropIndex) + word.slice(dropIndex + 1);
-          if (misspelled === word) {
-            misspelled = word + "e";
-          }
-        }
-        attempts++;
       } while (misspelled === word || words.includes(misspelled));
       return misspelled;
     }
 
-    // Start or restart the game
+    // Start the game
     function startGame() {
       if (words.length === 0) {
-        alert("Words are still loading. Please try again in a few seconds.");
+        alert("Words are still loading. Please wait.");
         return;
       }
 
       document.getElementById("startButton").style.display = "none";
+      playBackgroundMusic(); // ✅ Start music only after user clicks
+
       currentIndex = 0;
       score = 0;
       document.getElementById("score").innerText = "";
@@ -115,7 +116,7 @@
       nextWord();
     }
 
-    // Display the next word's choices
+    // Display next word choices
     function nextWord() {
       document.getElementById("message").innerText = "";
       document.getElementById("nextButton").style.display = "none";
@@ -142,7 +143,7 @@
       });
     }
 
-    // Check the answer when a choice is clicked
+    // Check answer and play sound
     function checkAnswer(selected, buttonClicked) {
       let buttons = document.querySelectorAll(".choice-button");
       buttons.forEach(btn => btn.disabled = true);
@@ -151,6 +152,7 @@
         buttonClicked.classList.add("correct");
         document.getElementById("message").innerText = "Correct! Great job!";
         score++;
+        document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
       } else {
         buttonClicked.classList.add("wrong");
         buttons.forEach(btn => {
@@ -159,13 +161,13 @@
           }
         });
         document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
+        document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
     }
 
-    // Load words when the page is opened
-    loadWords();
+    loadWords(); // Load words when page loads
   </script>
 </body>
 </html>
