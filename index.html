@@ -20,19 +20,14 @@
   </style>
 </head>
 <body>
-  <h1>Spelling Game</h1>
-  <p>Choose the correctly spelled word!</p>
-  <button id="startButton" onclick="startGame()">Start Game</button>
+  <h1>Spelling Game for Josh</h1>
+  <p id="loadingMessage">Loading words... Please wait.</p>
+  <button id="startButton" onclick="startGame()" disabled>Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
   <div id="score"></div>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
-
-  <!-- Audio Elements -->
-  <audio id="bgMusic" src="background.mp3" loop></audio>
-  <audio id="correctSound" src="correct.mp3"></audio>
-  <audio id="wrongSound" src="wrong.mp3"></audio>
 
   <script>
     let words = [];
@@ -42,33 +37,29 @@
     let currentWord = "";
     let currentMisspelled = "";
 
-    // Load words from CSV file
+    // Load words from CSV file with a fallback list
     function loadWords() {
       fetch('words.csv')
-        .then(response => response.text())
-        .then(text => {
-          words = text.split(',').map(word => word.trim());
-          document.getElementById("startButton").disabled = false; // Enable start button after words load
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Failed to load words.csv");
+          }
+          return response.text();
         })
-        .catch(error => console.error("Error loading words:", error));
+        .then(text => {
+          words = text.split(',').map(word => word.trim()).filter(word => word.length > 0);
+          if (words.length === 0) throw new Error("CSV file is empty.");
+          document.getElementById("loadingMessage").style.display = "none";
+          document.getElementById("startButton").disabled = false; // Enable start button after words load
+          console.log("Words loaded from CSV:", words);
+        })
+        .catch(error => {
+          console.error("Error loading words:", error);
+          words = ["apple", "banana", "cherry", "orange", "grape", "melon"]; // Fallback words
+          document.getElementById("loadingMessage").innerText = "Failed to load words from file. Using default words.";
+          document.getElementById("startButton").disabled = false; // Enable button
+        });
     }
-
-    // Start background music (must be triggered by user)
-    function playBackgroundMusic() {
-      let bgMusic = document.getElementById("bgMusic");
-      bgMusic.volume = 0.5; // Adjust volume
-      bgMusic.play().catch(error => console.log("BG Music play error:", error));
-    }
-
-    // Pause/resume music when tab visibility changes
-    document.addEventListener("visibilitychange", function() {
-      let bgMusic = document.getElementById("bgMusic");
-      if (document.hidden) {
-        bgMusic.pause();
-      } else {
-        bgMusic.play().catch(error => console.log("BG Music resume error:", error));
-      }
-    });
 
     // Shuffle an array
     function shuffleArray(array) {
@@ -103,8 +94,6 @@
       }
 
       document.getElementById("startButton").style.display = "none";
-      playBackgroundMusic(); // ✅ Start music only after user clicks
-
       currentIndex = 0;
       score = 0;
       document.getElementById("score").innerText = "";
@@ -152,7 +141,6 @@
         buttonClicked.classList.add("correct");
         document.getElementById("message").innerText = "Correct! Great job!";
         score++;
-        document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
       } else {
         buttonClicked.classList.add("wrong");
         buttons.forEach(btn => {
@@ -161,7 +149,6 @@
           }
         });
         document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
-        document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
