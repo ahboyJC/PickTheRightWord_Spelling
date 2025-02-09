@@ -16,12 +16,14 @@
     .wrong { background-color: #d0021b !important; color: #fff !important; }
     #message, #score { font-size: 1.8em; margin: 25px; }
     #startButton, #nextButton, #restartButton { padding: 15px 25px; font-size: 1.5em; margin: 25px; border-radius: 10px; cursor: pointer; background-color: #4a90e2; color: #fff; }
+    #fileInput { margin-top: 20px; }
     @media (max-width: 600px) { h1 { font-size: 2.5em; } p { font-size: 1.2em; } }
   </style>
 </head>
 <body>
   <h1>Spelling Game for Josh</h1>
   <p id="loadingMessage">Loading words... Please wait.</p>
+  <input type="file" id="fileInput" accept=".csv" style="display:none;" onchange="handleFileUpload(event)">
   <button id="startButton" onclick="startGame()" disabled>Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
@@ -37,28 +39,45 @@
     let currentWord = "";
     let currentMisspelled = "";
 
-    // Load words from CSV file with a fallback list
+    // Load words from CSV file with a fallback to file input
     function loadWords() {
       fetch('words.csv')
         .then(response => {
-          if (!response.ok) {
-            throw new Error("Failed to load words.csv");
-          }
+          if (!response.ok) throw new Error("Failed to load words.csv");
           return response.text();
         })
         .then(text => {
           words = text.split(',').map(word => word.trim()).filter(word => word.length > 0);
           if (words.length === 0) throw new Error("CSV file is empty.");
           document.getElementById("loadingMessage").style.display = "none";
-          document.getElementById("startButton").disabled = false; // Enable start button after words load
+          document.getElementById("startButton").disabled = false;
           console.log("Words loaded from CSV:", words);
         })
         .catch(error => {
           console.error("Error loading words:", error);
-          words = ["apple", "banana", "cherry", "orange", "grape", "melon"]; // Fallback words
-          document.getElementById("loadingMessage").innerText = "Failed to load words from file. Using default words.";
-          document.getElementById("startButton").disabled = false; // Enable button
+          document.getElementById("loadingMessage").innerText = "Failed to load words. Please select a CSV file.";
+          document.getElementById("fileInput").style.display = "block"; // Show file input
         });
+    }
+
+    // Handle file upload
+    function handleFileUpload(event) {
+      let file = event.target.files[0];
+      if (!file) return;
+
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        let text = e.target.result;
+        words = text.split(',').map(word => word.trim()).filter(word => word.length > 0);
+        if (words.length === 0) {
+          alert("The uploaded file is empty. Please try again.");
+          return;
+        }
+        document.getElementById("loadingMessage").style.display = "none";
+        document.getElementById("startButton").disabled = false;
+        console.log("Words loaded from uploaded file:", words);
+      };
+      reader.readAsText(file);
     }
 
     // Shuffle an array
@@ -132,7 +151,7 @@
       });
     }
 
-    // Check answer and play sound
+    // Check answer and update score
     function checkAnswer(selected, buttonClicked) {
       let buttons = document.querySelectorAll(".choice-button");
       buttons.forEach(btn => btn.disabled = true);
@@ -154,7 +173,7 @@
       document.getElementById("nextButton").style.display = "inline-block";
     }
 
-    loadWords(); // Load words when page loads
+    loadWords(); // Load default CSV on page load
   </script>
 </body>
 </html>
