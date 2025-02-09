@@ -60,9 +60,11 @@
       bgMusic.play().catch(error => console.log("BG Music play error:", error));
     }
 
-    // Ensure background music resumes when the tab is focused again
+    // Pause background music when tab is inactive, resume when active
     document.addEventListener("visibilitychange", function() {
-      if (!document.hidden) {
+      if (document.hidden) {
+        bgMusic.pause();
+      } else {
         bgMusic.play().catch(error => console.log("BG Music resume error:", error));
       }
     });
