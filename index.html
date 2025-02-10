@@ -16,18 +16,16 @@
     .wrong { background-color: #d0021b !important; color: #fff !important; }
     #message, #score { font-size: 1.8em; margin: 25px; }
     #startButton, #nextButton, #restartButton { padding: 15px 25px; font-size: 1.5em; margin: 25px; border-radius: 10px; cursor: pointer; background-color: #4a90e2; color: #fff; }
-    #fileInput { margin-top: 20px; display: none; }
     @media (max-width: 600px) { h1 { font-size: 2.5em; } p { font-size: 1.2em; } }
   </style>
 </head>
 <body>
   <h1>Spelling Game for Josh</h1>
-  <p id="loadingMessage">Loading words... Please wait.</p>
-  <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)">
-  <button id="startButton" onclick="startGame()" disabled>Start Game</button>
+  <p>Choose the correctly spelled word!</p>
+  <p id="score">Score: 0</p>
+  <button id="startButton" onclick="startGame()">Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
-  <div id="score"></div>
   <button id="nextButton" onclick="nextWord()" style="display:none;">Next Word</button>
   <button id="restartButton" onclick="startGame()" style="display:none;">Play Again</button>
 
@@ -45,53 +43,24 @@
     let currentMisspelled = "";
     let bgMusic = document.getElementById("bgMusic");
 
-    // Load words from CSV file, show upload option if it fails
+    // Load words from CSV file
     function loadWords() {
       fetch('words.csv')
-        .then(response => {
-          if (!response.ok) throw new Error("Failed to load words.csv");
-          return response.text();
-        })
+        .then(response => response.text())
         .then(text => {
           words = text.split(',').map(word => word.trim()).filter(word => word.length > 0);
-          if (words.length === 0) throw new Error("CSV file is empty.");
-          document.getElementById("loadingMessage").style.display = "none";
           document.getElementById("startButton").disabled = false;
         })
-        .catch(error => {
-          console.error("Error loading words:", error);
-          document.getElementById("loadingMessage").innerText = "Failed to load words. Please select a CSV file.";
-          document.getElementById("fileInput").style.display = "block"; // Show file upload option
-        });
+        .catch(error => console.error("Error loading words:", error));
     }
 
-    // Handle user-uploaded CSV file
-    function handleFileUpload(event) {
-      let file = event.target.files[0];
-      if (!file) return;
-
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let text = e.target.result;
-        words = text.split(',').map(word => word.trim()).filter(word => word.length > 0);
-        if (words.length === 0) {
-          alert("The uploaded file is empty. Please try again.");
-          return;
-        }
-        document.getElementById("loadingMessage").style.display = "none";
-        document.getElementById("fileInput").style.display = "none";
-        document.getElementById("startButton").disabled = false;
-      };
-      reader.readAsText(file);
-    }
-
-    // Play background music only when the game starts
+    // Play background music
     function playBackgroundMusic() {
       bgMusic.volume = 0.5;
       bgMusic.play().catch(error => console.log("BG Music play error:", error));
     }
 
-    // Pause background music when tab is inactive, resume when active
+    // Pause music when tab is inactive, resume when active
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
         bgMusic.pause();
@@ -136,7 +105,7 @@
 
       currentIndex = 0;
       score = 0;
-      document.getElementById("score").innerText = "";
+      document.getElementById("score").innerText = "Score: 0";
       document.getElementById("message").innerText = "";
       document.getElementById("restartButton").style.display = "none";
       document.getElementById("nextButton").style.display = "none";
@@ -151,7 +120,7 @@
       document.getElementById("nextButton").style.display = "none";
 
       if (currentIndex >= shuffledWords.length) {
-        document.getElementById("score").innerText = "Game Over! Your score: " + score + " out of " + shuffledWords.length;
+        document.getElementById("score").innerText = `Game Over! Final Score: ${score} / ${shuffledWords.length}`;
         document.getElementById("restartButton").style.display = "inline-block";
         document.getElementById("gameArea").innerHTML = "";
         return;
@@ -172,17 +141,26 @@
       });
     }
 
-    // Check answer and play sound
+    // Check answer and update score
     function checkAnswer(selected, buttonClicked) {
       let buttons = document.querySelectorAll(".choice-button");
       buttons.forEach(btn => btn.disabled = true);
 
       if (selected === currentWord) {
         buttonClicked.classList.add("correct");
-        document.getElementById("correctSound").play();
+        document.getElementById("message").innerText = "Correct! Great job!";
+        score++; // ✅ Increase the score
+        document.getElementById("score").innerText = `Score: ${score}`; // ✅ Update score display
+        document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
       } else {
         buttonClicked.classList.add("wrong");
-        document.getElementById("wrongSound").play();
+        buttons.forEach(btn => {
+          if (btn.innerText === currentWord) {
+            btn.classList.add("correct");
+          }
+        });
+        document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
+        document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
       }
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
