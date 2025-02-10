@@ -14,7 +14,7 @@
     .choice-button { min-width: 240px; background-color: #ffd966; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
     .correct { background-color: #7ed321 !important; color: #fff !important; }
     .wrong { background-color: #d0021b !important; color: #fff !important; }
-    #message, #score { font-size: 1.8em; margin: 25px; }
+    #message { font-size: 1.8em; margin: 25px; }
     #startButton, #nextButton, #restartButton { padding: 15px 25px; font-size: 1.5em; margin: 25px; border-radius: 10px; cursor: pointer; background-color: #4a90e2; color: #fff; }
     @media (max-width: 600px) { h1 { font-size: 2.5em; } p { font-size: 1.2em; } }
   </style>
@@ -22,7 +22,6 @@
 <body>
   <h1>Spelling Game for Josh</h1>
   <p>Choose the correctly spelled word!</p>
-  <p id="score">Score: 0</p>
   <button id="startButton" onclick="startGame()">Start Game</button>
   <div id="gameArea"></div>
   <div id="message"></div>
@@ -101,15 +100,13 @@
       }
 
       document.getElementById("startButton").style.display = "none";
-      playBackgroundMusic();
-
-      currentIndex = 0;
-      score = 0;
-      document.getElementById("score").innerText = "Score: 0";
       document.getElementById("message").innerText = "";
       document.getElementById("restartButton").style.display = "none";
       document.getElementById("nextButton").style.display = "none";
 
+      playBackgroundMusic();
+      currentIndex = 0;
+      score = 0;
       shuffledWords = shuffleArray(words.slice());
       nextWord();
     }
@@ -120,7 +117,7 @@
       document.getElementById("nextButton").style.display = "none";
 
       if (currentIndex >= shuffledWords.length) {
-        document.getElementById("score").innerText = `Game Over! Final Score: ${score} / ${shuffledWords.length}`;
+        document.getElementById("message").innerText = `Game Over! Final Score: ${score} / ${shuffledWords.length}`;
         document.getElementById("restartButton").style.display = "inline-block";
         document.getElementById("gameArea").innerHTML = "";
         return;
@@ -141,16 +138,14 @@
       });
     }
 
-    // Check answer and update score
+    // Check answer and update score at the end of the game
     function checkAnswer(selected, buttonClicked) {
       let buttons = document.querySelectorAll(".choice-button");
       buttons.forEach(btn => btn.disabled = true);
 
       if (selected === currentWord) {
         buttonClicked.classList.add("correct");
-        document.getElementById("message").innerText = "Correct! Great job!";
         score++; // ✅ Increase the score
-        document.getElementById("score").innerText = `Score: ${score}`; // ✅ Update score display
         document.getElementById("correctSound").play().catch(error => console.log("Correct sound error:", error));
       } else {
         buttonClicked.classList.add("wrong");
@@ -159,9 +154,9 @@
             btn.classList.add("correct");
           }
         });
-        document.getElementById("message").innerText = "Oops! The correct spelling is: " + currentWord;
         document.getElementById("wrongSound").play().catch(error => console.log("Wrong sound error:", error));
       }
+
       currentIndex++;
       document.getElementById("nextButton").style.display = "inline-block";
     }
